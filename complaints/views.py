@@ -6,11 +6,16 @@ from .models import Complaint, Like, Comment
 from .forms import ComplaintForm
 from django.http import JsonResponse
 from django.db.models import Count
+from django.contrib.auth.models import User
+from django.http import HttpResponse
 
 def community_feed(request):
    
     complaints = Complaint.objects.all().order_by('-created_at')
     return render(request, 'complaints/index.html', {'complaints': complaints})
+
+
+
 
 
 @login_required
@@ -75,7 +80,7 @@ def detail_view(request, id):
 def my_complaints(request):
     user_complaints = Complaint.objects.filter(user=request.user).order_by('-created_at')
     return render(request, 'complaints/my_complaints.html', {'complaints': user_complaints})
-    
+
 @staff_member_required
 def admin_dashboard(request):
     if request.method == "POST":
@@ -112,3 +117,8 @@ def admin_dashboard(request):
     return render(request, 'complaints/admin_dashboard.html', context)
 
 
+def delete_complaint(request, complaint_id):
+    complaint = get_object_or_404(Complaint, id=complaint_id)
+    complaint.delete()
+    messages.success(request, "Complaint deleted successfully.")
+    return redirect('complaints:admin_dashboard')
