@@ -1,0 +1,4 @@
+Use Django for backend and Bootstrap for frontend. All projects will use PostgreSQL and must be deployable on Render.
+---
+alwaysApply: true
+---

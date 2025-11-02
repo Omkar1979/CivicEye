@@ -1,0 +1,179 @@
+{% extends 'complaints/base.html' %}
+
+{% block title %}{{ complaint.title }} - Civic Issue Reporting System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'complaints:home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ complaint.title|truncatechars:30 }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Main Complaint Card -->
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h2 class="mb-0">{{ complaint.title }}</h2>
+                    <span class="badge fs-6
+                        {% if complaint.status == 'Pending' %}status-pending
+                        {% elif complaint.status == 'In Progress' %}status-in-progress
+                        {% elif complaint.status == 'Resolved' %}status-resolved
+                        {% endif %}">
+                        {{ complaint.status }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <!-- Image Section -->
+                {% if complaint.image %}
+                <div class="mb-4">
+                    <img src="{{ complaint.image.url }}" class="img-fluid rounded shadow" alt="{{ complaint.title }}">
+                </div>
+                {% endif %}
+                
+                <!-- Description -->
+                <div class="mb-4">
+                    <h5><i class="bi bi-file-text"></i> Description</h5>
+                    <p class="lead">{{ complaint.description }}</p>
+                </div>
+                
+                <!-- Details Grid -->
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">
+                                    <i class="bi bi-geo-alt"></i> Location
+                                </h6>
+                                <p class="card-text">{{ complaint.location }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">
+                                    <i class="bi bi-tag"></i> Category
+                                </h6>
+                                <p class="card-text">{{ complaint.category }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">
+                                    <i class="bi bi-person"></i> Reported By
+                                </h6>
+                                <p class="card-text">{{ complaint.user.get_full_name|default:complaint.user.username }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light">
+                            <div class="card-body">
+                                <h6 class="card-title text-primary">
+                                    <i class="bi bi-calendar"></i> Reported On
+                                </h6>
+                                <p class="card-text">{{ complaint.created_at|date:"F d, Y \a\t g:i A" }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Last Updated -->
+                {% if complaint.updated_at != complaint.created_at %}
+                <div class="mt-4">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Last Updated:</strong> {{ complaint.updated_at|date:"F d, Y \a\t g:i A" }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <!-- Status Card -->
+        <div class="card shadow mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-activity"></i> Status Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="text-center mb-3">
+                    <span class="badge fs-5 px-3 py-2
+                        {% if complaint.status == 'Pending' %}status-pending
+                        {% elif complaint.status == 'In Progress' %}status-in-progress
+                        {% elif complaint.status == 'Resolved' %}status-resolved
+                        {% endif %}">
+                        {{ complaint.status }}
+                    </span>
+                </div>
+                
+                <div class="progress mb-3">
+                    <div class="progress-bar 
+                        {% if complaint.status == 'Pending' %}bg-warning
+                        {% elif complaint.status == 'In Progress' %}bg-info
+                        {% elif complaint.status == 'Resolved' %}bg-success
+                        {% endif %}" 
+                        role="progressbar" 
+                        style="width: 
+                        {% if complaint.status == 'Pending' %}33
+                        {% elif complaint.status == 'In Progress' %}66
+                        {% elif complaint.status == 'Resolved' %}100
+                        {% endif %}%">
+                    </div>
+                </div>
+                
+                <div class="small text-muted">
+                    {% if complaint.status == 'Pending' %}
+                        <i class="bi bi-clock"></i> Your complaint is being reviewed by authorities.
+                    {% elif complaint.status == 'In Progress' %}
+                        <i class="bi bi-gear"></i> Work is in progress to resolve this issue.
+                    {% elif complaint.status == 'Resolved' %}
+                        <i class="bi bi-check-circle"></i> This issue has been successfully resolved.
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Actions Card -->
+        <div class="card shadow">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="bi bi-tools"></i> Actions
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'complaints:home' %}" class="btn btn-outline-primary">
+                        <i class="bi bi-arrow-left"></i> Back to All Issues
+                    </a>
+                    <a href="{% url 'complaints:report' %}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Report Another Issue
+                    </a>
+                    {% if user.is_staff %}
+                    <a href="/admin/complaints/complaint/{{ complaint.id }}/change/" class="btn btn-outline-secondary">
+                        <i class="bi bi-gear"></i> Edit in Admin
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

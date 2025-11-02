@@ -1,0 +1,178 @@
+{% extends 'complaints/base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container py-4 text-light" style="font-family: 'Poppins', sans-serif;">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="fw-bold"><i class="bi bi-speedometer2 text-success"></i> Admin Dashboard</h4>
+    <a href="{% url 'complaints:home' %}" class="btn btn-outline-light btn-sm rounded-pill">
+      <i class="bi bi-house"></i> Back to Home
+    </a>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="row g-3 mb-4 text-center">
+    <div class="col-6 col-md-3">
+      <div class="summary-card bg-dark text-light p-3 rounded-3 border border-success border-2 shadow-sm">
+        <h5>Total</h5>
+        <h3>{{ total_complaints }}</h3>
+        <small class="text-success">+5% this month</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="summary-card bg-dark text-warning p-3 rounded-3 border border-warning border-2 shadow-sm">
+        <h5>Pending</h5>
+        <h3>{{ pending }}</h3>
+        <small>-3% vs last month</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="summary-card bg-dark text-info p-3 rounded-3 border border-info border-2 shadow-sm">
+        <h5>In Progress</h5>
+        <h3>{{ in_progress }}</h3>
+        <small>+3% vs last month</small>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="summary-card bg-dark text-success p-3 rounded-3 border border-success border-2 shadow-sm">
+        <h5>Resolved</h5>
+        <h3>{{ resolved }}</h3>
+        <small>+8% vs last month</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts -->
+  <div class="row g-4 mb-5">
+    <div class="col-md-7">
+      <div class="chart-card bg-dark p-3 rounded-3 shadow">
+        <h6 class="text-light mb-3"><i class="bi bi-bar-chart"></i> Complaint Trends (30 Days)</h6>
+        <canvas id="categoryChart"></canvas>
+      </div>
+    </div>
+    <div class="col-md-5">
+      <div class="chart-card bg-dark p-3 rounded-3 shadow">
+        <h6 class="text-light mb-3"><i class="bi bi-pie-chart"></i> Complaint Status Overview</h6>
+        <canvas id="statusChart"></canvas>
+        <p class="text-center text-secondary mt-3 mb-0">Total Complaints: {{ total_complaints }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Manage Complaints Table -->
+  <div class="card bg-dark text-light p-4 rounded-4 shadow">
+    <h4 class="mb-3"><i class="bi bi-list-task text-success"></i> Manage Complaints</h4>
+
+    <form method="POST">
+      {% csrf_token %}
+      <div class="table-responsive">
+        <table class="table table-dark table-hover align-middle text-light">
+          <thead class="table-success text-dark">
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>User</th>
+              <th>Category</th>
+              <th>Status</th>
+              <th>Department</th>
+              <th>Location</th>
+              <th>Created</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for complaint in complaints %}
+            <tr>
+              <td>{{ complaint.id }}</td>
+              <td>{{ complaint.title }}</td>
+              <td>{{ complaint.user.username }}</td>
+              <td>{{ complaint.category }}</td>
+
+              <td>
+                <select name="status_{{ complaint.id }}" class="form-select form-select-sm bg-secondary text-light border-0">
+                  <option value="Pending" {% if complaint.status == 'Pending' %}selected{% endif %}>Pending</option>
+                  <option value="In Progress" {% if complaint.status == 'In Progress' %}selected{% endif %}>In Progress</option>
+                  <option value="Resolved" {% if complaint.status == 'Resolved' %}selected{% endif %}>Resolved</option>
+                </select>
+              </td>
+
+              <td>
+                <select name="department_{{ complaint.id }}" class="form-select form-select-sm bg-secondary text-light border-0">
+                  <option value="">-- Select --</option>
+                  {% for dept in departments %}
+                  <option value="{{ dept }}" {% if complaint.assigned_department == dept %}selected{% endif %}>{{ dept }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+
+              <td>{{ complaint.location }}</td>
+              <td>{{ complaint.created_at|date:"M d, Y - H:i" }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="text-end mt-3">
+        <button type="submit" class="btn btn-success rounded-pill px-4 shadow">
+          <i class="bi bi-save"></i> Save Changes
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const categoryData = {{ category_data|safe }};
+  const categoryLabels = categoryData.map(item => item.category);
+  const categoryCounts = categoryData.map(item => item.count);
+
+  new Chart(document.getElementById('categoryChart'), {
+    type: 'bar',
+    data: {
+      labels: categoryLabels,
+      datasets: [{
+        label: 'Complaints by Category',
+        data: categoryCounts,
+        backgroundColor: '#00ff88',
+        borderRadius: 8
+      }]
+    },
+    options: {
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: 'white' } },
+        y: { ticks: { color: 'white' }, beginAtZero: true }
+      }
+    }
+  });
+
+  new Chart(document.getElementById('statusChart'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Pending', 'In Progress', 'Resolved'],
+      datasets: [{
+        data: [{{ pending }}, {{ in_progress }}, {{ resolved }}],
+        backgroundColor: ['#ff4040', '#f4d03f', '#00ff88'],
+        borderWidth: 0
+      }]
+    },
+    options: {
+      plugins: {
+        legend: {
+          labels: { color: 'white' }
+        }
+      }
+    }
+  });
+</script>
+
+<style>
+  body { background-color: #121212; }
+  .summary-card:hover { transform: translateY(-3px); transition: 0.3s; }
+  .chart-card { min-height: 300px; }
+  .progress { background-color: #333; }
+  select.form-select-sm:focus { box-shadow: none; outline: none; }
+</style>
+{% endblock %}

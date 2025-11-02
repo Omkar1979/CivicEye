@@ -1,0 +1,202 @@
+{% extends 'complaints/base.html' %}
+
+{% block title %}Community Feed - Civic Issue Reporting System{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="text-dark fw-bold"><i class="bi bi-people-fill text-primary"></i> Community Feed</h1>
+    <a href="{% url 'complaints:report' %}" class="btn btn-primary shadow-sm rounded-pill">
+      <i class="bi bi-plus-circle"></i> Report New Issue
+    </a>
+  </div>
+
+  {% if complaints %}
+  <div class="row">
+    {% for complaint in complaints %}
+    <div class="col-md-6 col-lg-4 mb-4">
+      <div class="card h-100 border-0 shadow rounded-4" style="background-color: #fffaf0;">
+        
+        <!--  Image Frame Added -->
+        <div class="image-frame">
+          {% if complaint.image %}
+            <img src="{{ complaint.image.url }}" class="card-img-top rounded-top-4" alt="{{ complaint.title }}">
+          {% else %}
+            <div class="card-img-top bg-light d-flex align-items-center justify-content-center rounded-top-4" style="height: 200px;">
+              <i class="bi bi-image text-secondary" style="font-size: 3rem;"></i>
+            </div>
+          {% endif %}
+        </div>
+
+        <div class="card-body d-flex flex-column" style="background-color: #fcf9f9;">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <h5 class="card-title fw-semibold text-dark">{{ complaint.title|truncatechars:50 }}</h5>
+            <span class="badge 
+              {% if complaint.status == 'Pending' %}bg-warning text-dark
+              {% elif complaint.status == 'In Progress' %}bg-info text-dark
+              {% elif complaint.status == 'Resolved' %}bg-success
+              {% endif %}">
+              {{ complaint.status }}
+            </span>
+          </div>
+
+          <p class="card-text text-secondary small">{{ complaint.description|truncatechars:100 }}</p>
+
+          <div class="mt-auto">
+            <div class="row text-muted small mb-2">
+              <div class="col-6">
+                <i class="bi bi-geo-alt"></i> {{ complaint.location }}
+              </div>
+              <div class="col-6 text-end">
+                <i class="bi bi-tag"></i> {{ complaint.category }}
+              </div>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <small class="text-dark">
+                <i class="bi bi-person"></i> {{ complaint.user.username }}
+              </small>
+              <small class="text-secondary">
+                <i class="bi bi-calendar"></i> {{ complaint.created_at|date:"M d, Y" }}
+              </small>
+            </div>
+
+            <!-- Like, Comment, Share Buttons -->
+            <div class="d-flex justify-content-between align-items-center mt-2">
+              <button 
+                class="btn btn-outline-primary btn-sm like-btn rounded-pill px-3" 
+                data-id="{{ complaint.id }}">
+                <i class="bi bi-hand-thumbs-up"></i> 
+                Like (<span id="like-count-{{ complaint.id }}">{{ complaint.total_likes }}</span>)
+              </button>
+
+              <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" type="button" data-bs-toggle="collapse" data-bs-target="#comments-{{ complaint.id }}">
+                <i class="bi bi-chat"></i> Comments ({{ complaint.comments.count }})
+              </button>
+
+              <a href="https://wa.me/?text={{ request.build_absolute_uri|slice:':-1' }}{% url 'complaints:detail' complaint.id %}" 
+                 target="_blank" 
+                 class="btn btn-outline-success btn-sm rounded-pill px-3">
+                <i class="bi bi-share"></i> Share
+              </a>
+            </div>
+
+            <!-- Comments Section -->
+            <div class="collapse mt-3" id="comments-{{ complaint.id }}">
+              <div class="border rounded p-2 bg-light text-dark">
+                {% for comment in complaint.comments.all %}
+                  <p class="mb-1"><strong>{{ comment.user.username }}</strong>: {{ comment.text }}</p>
+                {% empty %}
+                  <p class="text-muted">No comments yet. Be the first to comment!</p>
+                {% endfor %}
+
+                {% if user.is_authenticated %}
+                <form method="POST" action="{% url 'complaints:add_comment' complaint.id %}">
+                  {% csrf_token %}
+                  <textarea name="comment_text" class="form-control mb-2" rows="2" placeholder="Write a comment..." required></textarea>
+                  <button type="submit" class="btn btn-sm btn-primary rounded-pill px-3">Post</button>
+                </form>
+                {% else %}
+                  <p class="text-muted">Login to comment.</p>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="mt-3 text-center">
+              <a href="{% url 'complaints:detail' complaint.id %}" class="btn btn-outline-info btn-sm rounded-pill px-4">
+                <i class="bi bi-eye"></i> View Details
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="text-center py-5 text-muted">
+    <i class="bi bi-inbox text-secondary" style="font-size: 4rem;"></i>
+    <h3 class="mt-3">No Community Posts Yet</h3>
+    <p>Be the first to share a civic issue in your area.</p>
+    <a href="{% url 'complaints:report' %}" class="btn btn-primary rounded-pill">
+      <i class="bi bi-plus-circle"></i> Report Your First Issue
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll(".like-btn").forEach(button => {
+      button.addEventListener("click", function() {
+        const complaintId = this.dataset.id;
+        const likeCount = document.getElementById(`like-count-${complaintId}`);
+        
+        fetch(`/like/${complaintId}/`, {
+          method: "POST",
+          headers: {
+            "X-CSRFToken": "{{ csrf_token }}",
+            "X-Requested-With": "XMLHttpRequest"
+          }
+        })
+        .then(response => response.json())
+        .then(data => {
+          likeCount.textContent = data.likes_count;
+          this.classList.toggle("btn-primary", data.liked);
+          this.classList.toggle("btn-outline-primary", !data.liked);
+        })
+        .catch(err => console.error("Error:", err));
+      });
+    });
+  });
+</script>
+
+<style>
+  body {
+    background-color: #f0ebdf; /* soft cream tone */
+  }
+
+  .card {
+    transition: transform 0.2s ease-in-out, box-shadow 0.3s;
+  }
+
+  .card:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  }
+
+  /* ✅ Image frame styling */
+  .image-frame {
+    border: 3px solid #b1a0a0; /* frame color */
+    border-radius: 12px;
+    padding: 5px;
+    background-color: #f7f2ee;
+    margin: 10px;
+  }
+
+  .image-frame img {
+    border-radius: 8px;
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+  }
+
+  .navbar {
+    background-color: #000000 !important;
+  }
+
+  .navbar a, .navbar-brand {
+    color: #ffffff !important;
+  }
+
+  .navbar a:hover {
+    color: #b5b5b5 !important;
+  }
+</style>
+{% endblock %}
