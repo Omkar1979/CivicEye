@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
-class Complaint(models.Model):
+class Complaint(models.Model): #inherited Models class from Model
     CATEGORY_CHOICES = [
         ('Road', 'Road'),
         ('Water', 'Water'),
