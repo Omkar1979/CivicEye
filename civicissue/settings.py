@@ -9,18 +9,15 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-9e3z47#o(40b2875%rvg(h$tqwaibv1%ntshpl4j(7m-9zb7p3')
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = os.getenv('ALLOWED_HOSTS', '127.0.0.1,localhost,testserver').split(',')
 
-# Application definition
+# ---------------- APPS ---------------- #
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -28,12 +25,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # Your app
     'complaints',
+
+    # Cloudinary
+    # 'cloudinary',
+    # 'cloudinary_storage',
 ]
 
+# ---------------- MIDDLEWARE ---------------- #
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # For static files in production
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -44,6 +48,7 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'civicissue.urls'
 
+# ---------------- TEMPLATE ---------------- #
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -61,17 +66,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'civicissue.wsgi.application'
 
-
-# ---------------- DATABASE CONFIGURATION ---------------- #
-# Use PostgreSQL on Render, SQLite locally
-
+# ---------------- DATABASE ---------------- #
 import dj_database_url
 
-
-# Database configuration - use PostgreSQL on Render, SQLite locally
 DATABASE_URL = os.environ.get('DATABASE_URL')
+
 if DATABASE_URL:
-    # Production: Use PostgreSQL with SSL
     DATABASES = {
         'default': dj_database_url.config(
             default=DATABASE_URL,
@@ -80,7 +80,6 @@ if DATABASE_URL:
         )
     }
 else:
-    # Development: Use SQLite
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
@@ -88,16 +87,13 @@ else:
         }
     }
 
-
-
 # ---------------- PASSWORD VALIDATION ---------------- #
 AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',},
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
-
 
 # ---------------- INTERNATIONALIZATION ---------------- #
 LANGUAGE_CODE = 'en-us'
@@ -105,23 +101,30 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-
-# ---------------- STATIC & MEDIA FILES ---------------- #
+# ---------------- STATIC FILES ---------------- #
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
+# ---------------- MEDIA (CLOUDINARY) ---------------- #
+
+# Use Cloudinary automatically for all uploaded files
+
+
+# REQUIRED CONFIG — without this Cloudinary will NOT work
+# CLOUDINARY_STORAGE = {
+#     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+#     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+#     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
+# }
+# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+# Still keep local media path (not used for storing, but needed by Django)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
-# ---------------- AUTHENTICATION ---------------- #
+# ---------------- AUTH ---------------- #
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-
-# ---------------- DEFAULT FIELD TYPE ---------------- #
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
