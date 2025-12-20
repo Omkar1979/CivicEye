@@ -30,8 +30,8 @@ INSTALLED_APPS = [
     'complaints',
 
     # Cloudinary
-    # 'cloudinary',
-    # 'cloudinary_storage',
+    'cloudinary',
+    'cloudinary_storage',
 ]
 
 # ---------------- MIDDLEWARE ---------------- #
@@ -71,6 +71,7 @@ import dj_database_url
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
+
 if DATABASE_URL:
     DATABASES = {
         'default': dj_database_url.config(
@@ -78,6 +79,7 @@ if DATABASE_URL:
             conn_max_age=600,
             ssl_require=True
         )
+
     }
 else:
     DATABASES = {
@@ -108,17 +110,24 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ---------------- MEDIA (CLOUDINARY) ---------------- #
 
-# Use Cloudinary automatically for all uploaded files
+# Use Cloudinary only if credentials are provided, otherwise use local storage
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
 
+# Only use Cloudinary if all credentials are provided
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    CLOUDINARY_STORAGE = {
+        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
+        'API_KEY': CLOUDINARY_API_KEY,
+        'API_SECRET': CLOUDINARY_API_SECRET,
+    }
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+else:
+    # Use local file storage when Cloudinary is not configured
+    DEFAULT_FILE_STORAGE = 'django.core.files.storage.FileSystemStorage'
 
-# REQUIRED CONFIG — without this Cloudinary will NOT work
-# CLOUDINARY_STORAGE = {
-#     'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
-#     'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
-#     'API_SECRET': os.getenv('CLOUDINARY_API_SECRET'),
-# }
-# DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-# Still keep local media path (not used for storing, but needed by Django)
+# Media files configuration
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
