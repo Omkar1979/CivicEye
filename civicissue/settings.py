@@ -1,7 +1,8 @@
 """
 Django settings for civicissue project.
 """
-
+# 04-03-2026
+# postgress database is commented out for local development and cloudinary is also commented out
 from pathlib import Path
 import os
 from dotenv import load_dotenv
@@ -109,7 +110,6 @@ USE_TZ = True
 # ---------------- STATIC FILES ---------------- #
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # ---------------- MEDIA (CLOUDINARY) ---------------- #
 
@@ -129,7 +129,7 @@ if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
             "BACKEND": "cloudinary_storage.storage.MediaCloudinaryStorage",
         },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
 else:
@@ -138,13 +138,13 @@ else:
             "BACKEND": "django.core.files.storage.FileSystemStorage",
         },
         "staticfiles": {
-            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+            "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
         },
     }
 
 # MEDIA_URL / MEDIA_ROOT not needed for Cloudinary
-# MEDIA_URL = '/media/'
-# MEDIA_ROOT = BASE_DIR / 'media'
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 
 # ---------------- AUTH ---------------- #
