@@ -16,7 +16,7 @@ CivicIssue is a Django-based civic complaints platform that lets citizens report
 
 The high-level flow of data and responsibilities across the system:
 
-![CivicIssue architecture flowchart]([docs/architecture-flowchart.png](https://res.cloudinary.com/dzbfjx3vk/image/upload/v1776889397/flowchart_ptsuzh.png))
+![CivicIssue architecture flowchart](CivicEye/flowchart.png))
 
 ### Flow walkthrough
 
