@@ -12,7 +12,7 @@ CivicIssue is a Django-based civic complaints platform that lets citizens report
 - **Department resolution** — Issues are routed to the correct department, marked resolved, and acknowledged back to the citizen.
 - **Notification system** — Citizens are notified when status changes occur.
 
-## Architecture
+## FLOW CHART
 
 The high-level flow of data and responsibilities across the system:
 
