@@ -1,4 +1,4 @@
-# CivicIssue
+# CivicEye
 
 CivicIssue is a Django-based civic complaints platform that lets citizens report local issues (with photos and location), routes them through a backend API and ML-powered moderation pipeline, and helps municipal administrators triage, assign, and resolve them. Reports are surfaced back to the community through a public feed and a notification system.
 
